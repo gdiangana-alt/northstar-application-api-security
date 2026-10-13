@@ -42,6 +42,15 @@ jobs:
       - name: Validate selected response and API controls
         run: python3 scripts/validate_controls.py
 
+      - name: Install browser test dependencies
+        run: |
+          python3 -m venv "$RUNNER_TEMP/northstar-browser-venv"
+          "$RUNNER_TEMP/northstar-browser-venv/bin/pip" install playwright==1.56.0
+          "$RUNNER_TEMP/northstar-browser-venv/bin/python" -m playwright install --with-deps chromium
+
+      - name: Validate catalogue and CSP in Chromium
+        run: '"$RUNNER_TEMP/northstar-browser-venv/bin/python" scripts/browser_smoke.py'
+
       - name: Scan baseline and gateway
         run: |
           zap_uid="$(docker run --rm --entrypoint id ghcr.io/zaproxy/zaproxy:stable -u)"
