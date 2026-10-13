@@ -1,0 +1,52 @@
+name: ZAP Juice Shop Baseline
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  zap-baseline:
+    name: Lab baseline scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v7
+
+      - name: Start isolated Juice Shop lab
+        run: |
+          docker run --rm -d --name northstar-juice-shop             --health-cmd='wget --no-verbose --tries=1 --spider http://127.0.0.1:3000/ || exit 1'             --health-interval=5s             --health-timeout=3s             --health-retries=24             -p 127.0.0.1:3000:3000             bkimminich/juice-shop:v19.1.1
+
+      - name: Confirm lab is healthy
+        run: |
+          for attempt in {1..30}; do
+            if curl --fail --silent --show-error http://127.0.0.1:3000/ >/dev/null; then
+              exit 0
+            fi
+            sleep 2
+          done
+          docker logs northstar-juice-shop
+          exit 1
+
+      - name: Run ZAP passive baseline
+        run: |
+          mkdir -p evidence
+          docker run --rm --network host             -v "$GITHUB_WORKSPACE/evidence:/zap/wrk"             ghcr.io/zaproxy/zaproxy:stable             zap-baseline.py               -t http://127.0.0.1:3000               -J zap-report.json               -r zap-report.html               -I
+
+      - name: Upload scan evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: zap-juice-shop-baseline
+          path: evidence/
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Stop lab
+        if: always()
+        run: docker rm -f northstar-juice-shop || true
+

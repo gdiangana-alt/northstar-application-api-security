@@ -1,0 +1,5 @@
+evidence/private/
+evidence/*.json
+evidence/*.html
+.DS_Store
+
