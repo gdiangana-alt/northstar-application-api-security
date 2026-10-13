@@ -36,7 +36,17 @@ jobs:
       - name: Run ZAP passive baseline
         run: |
           mkdir -p evidence
+          docker pull ghcr.io/zaproxy/zaproxy:stable
+          zap_uid="$(docker run --rm --entrypoint id ghcr.io/zaproxy/zaproxy:stable -u)"
+          zap_gid="$(docker run --rm --entrypoint id ghcr.io/zaproxy/zaproxy:stable -g)"
+          sudo chown "$zap_uid:$zap_gid" evidence
           docker run --rm --network host             -v "$GITHUB_WORKSPACE/evidence:/zap/wrk"             ghcr.io/zaproxy/zaproxy:stable             zap-baseline.py               -t http://127.0.0.1:3000               -J zap-report.json               -r zap-report.html               -I
+
+      - name: Verify report files
+        run: |
+          test -s evidence/zap-report.json
+          test -s evidence/zap-report.html
+          python3 -m json.tool evidence/zap-report.json >/dev/null
 
       - name: Upload scan evidence
         uses: actions/upload-artifact@v4
