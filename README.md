@@ -1,6 +1,6 @@
 # NorthStar Application & API Security Lab
 
-**Status:** Lab-only CI implementation package. Scan evidence, manual validation, remediation and retesting are pending GitHub Actions execution.
+**Status:** Verified scan, selected-control mitigation, retest and browser-validation case study. Dependency and inline-style findings remain open.
 
 ## Objective
 
@@ -72,3 +72,12 @@ Do not use this wording until the workflow has completed successfully and the ev
 - [OWASP ZAP baseline scan](https://www.zaproxy.org/docs/docker/baseline-scan/)
 - [ZAP GitHub Action](https://github.com/zaproxy/action-baseline)
 
+
+## Verified results
+
+[Read the verified case study and remaining risks](docs/verified-results.md).
+
+Baseline and gateway scans each covered 95 URLs. CSP/CORS response controls,
+restricted image sources, Chromium compatibility checks and the selected-control
+CI gate passed. Earlier setup instructions describe the initial workflow;
+the current workflow performs baseline and gateway retesting.
